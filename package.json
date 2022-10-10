@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon --quiet",
     "test": "ts-node src/index.ts -t 1",
-    "build": "tsc src/index.ts"
+    "build": "tsc src/index.ts",
+    "print:env": "cat ./.env"
   },
   "bin": {
     "figma-scrape-text": "dist/index.js"
@@ -14,6 +15,7 @@
   "author": "Alexander Zizzo <azizzo@netflix.com>",
   "dependencies": {
     "argparse": "^2.0.1",
+    "dotenv": "^16.0.3",
     "jest-environment-node": "^29.1.2",
     "node-fetch": "^3.2.10",
     "puppeteer": "^18.2.1"
