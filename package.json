@@ -1,0 +1,27 @@
+{
+  "name": "figma-puppeteer-run-command",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "private": true,
+  "scripts": {
+    "start": "nodemon --quiet",
+    "test": "ts-node src/index.ts -t 1",
+    "build": "tsc src/index.ts"
+  },
+  "bin": {
+    "figma-scrape-text": "dist/index.js"
+  },
+  "author": "Alexander Zizzo <azizzo@netflix.com>",
+  "dependencies": {
+    "argparse": "^2.0.1",
+    "jest-environment-node": "^29.1.2",
+    "node-fetch": "^3.2.10",
+    "puppeteer": "^18.2.1"
+  },
+  "devDependencies": {
+    "@types/argparse": "^2.0.10",
+    "@types/node-fetch": "^2.6.2",
+    "nodemon": "^2.0.20",
+    "ts-node": "^10.9.1"
+  }
+}
