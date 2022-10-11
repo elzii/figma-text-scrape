@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon --quiet",
     "test": "printf \"%s\" $(cat ./.env); ts-node src/index.ts --debug",
-    "build": "tsc src/index.ts",
+    "build": "tsc -t es6 --module node16 --outDir 'dist/' ./src/index.ts",
+    "build:bin": "./build-binary.sh",
     "ws:test": "ts-node src/index.ts -t 1",
     "print:env": "cat ./.env"
   },
