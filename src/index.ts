@@ -1,19 +1,12 @@
-import * as dotenv from 'dotenv'
-import path from 'path'
 import * as puppeteer from 'puppeteer'
 import { ArgumentParser } from 'argparse'
 import * as CProc from 'child_process'
-
-// SETUP
-dotenv.config()
-// dotenv.config({ path: path.resolve('../.env') })
-// dotenv.config({ path: path.resolve(__dirname, '../.env') })
 
 
 // DEFAULTS
 const DEFAULT_FIGMA_FILE_KEY = `AaMB8IZv56Hg2a7ve7BHj7`
 const DEFAULT_FIGMA_FILE_URL = `https://www.figma.com/file/${DEFAULT_FIGMA_FILE_KEY}/Untitled`
-const FIGMA_FILE_KEY = process.env.FIGMA_FILE_KEY as string
+const FIGMA_FILE_KEY = "59071-236aa42a-1cd8-4651-bca6-1bad14cad93f"
 
 
 const parser = new ArgumentParser({ description: 'Figma Puppeteer Scraping' })
@@ -123,7 +116,7 @@ export async function getFigmaFileViaRESTAPI({ fileKey, nodeId, versionId, token
   // @WORKING
   return new Promise((resolve, reject) => {
     const cmd = `curl --silent -X GET \
-      --header "X-Figma-Token: ${process.env.FIGMA_FILE_KEY}" \
+      --header "X-Figma-Token: ${FIGMA_FILE_KEY}" \
       ${url}`
     CProc.exec(cmd, (err, stdout, _stderr) => {
       if( err ) reject(err)
@@ -223,11 +216,9 @@ export function buildFigmaUrlWithParameters(url: string) {
 
 export async function iterateRESTAPIExample() {
     
-    dotenv.config({ path:__dirname + '/./../.env' })
-
     const file = await getFigmaFileViaRESTAPI({
       fileKey: DEFAULT_FIGMA_FILE_KEY,
-      token: process.env.FIGMA_FILE_KEY as string,
+      token: FIGMA_FILE_KEY,
     })
   
     // TRY INSTEAD: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield
@@ -259,9 +250,6 @@ if (typeof require !== 'undefined' && require.main === module) {
   // console.log(args)
 
   ;(async () => {
-    // IMPORT ENV VARS
-    dotenv.config({ path:__dirname + '/./../.env' })
-
     const figmaUrl = buildFigmaUrlWithParameters(args.url)
     
     // Our script to evaluate in console

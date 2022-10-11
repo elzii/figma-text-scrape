@@ -44,18 +44,13 @@ var __rest = (this && this.__rest) || function (s, e) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.iterateRESTAPIExample = exports.buildFigmaUrlWithParameters = exports.scrapeFigmaFile = exports.initRemoteEvalRuntime = exports.getWindowId = exports.getFigmaFileViaRESTAPI = exports.getChromeRemoteDebuggingWebSocketInfo = void 0;
-const dotenv = __importStar(require("dotenv"));
 const puppeteer = __importStar(require("puppeteer"));
 const argparse_1 = require("argparse");
 const CProc = __importStar(require("child_process"));
-// SETUP
-dotenv.config();
-// dotenv.config({ path: path.resolve('../.env') })
-// dotenv.config({ path: path.resolve(__dirname, '../.env') })
 // DEFAULTS
 const DEFAULT_FIGMA_FILE_KEY = `AaMB8IZv56Hg2a7ve7BHj7`;
 const DEFAULT_FIGMA_FILE_URL = `https://www.figma.com/file/${DEFAULT_FIGMA_FILE_KEY}/Untitled`;
-const FIGMA_FILE_KEY = process.env.FIGMA_FILE_KEY;
+const FIGMA_FILE_KEY = "59071-236aa42a-1cd8-4651-bca6-1bad14cad93f";
 const parser = new argparse_1.ArgumentParser({ description: 'Figma Puppeteer Scraping' });
 parser.add_argument('-u', '--url', {
     help: 'The URL of the Figma File [Ex: https://www.figma.com/file/AaMB8IZv56Hg2a7ve7BHj7/Untitled]',
@@ -119,7 +114,7 @@ function getFigmaFileViaRESTAPI({ fileKey, nodeId, versionId, token, depth }) {
         // @WORKING
         return new Promise((resolve, reject) => {
             const cmd = `curl --silent -X GET \
-      --header "X-Figma-Token: ${process.env.FIGMA_FILE_KEY}" \
+      --header "X-Figma-Token: ${FIGMA_FILE_KEY}" \
       ${url}`;
             CProc.exec(cmd, (err, stdout, _stderr) => {
                 if (err)
@@ -204,10 +199,9 @@ function buildFigmaUrlWithParameters(url) {
 exports.buildFigmaUrlWithParameters = buildFigmaUrlWithParameters;
 function iterateRESTAPIExample() {
     return __awaiter(this, void 0, void 0, function* () {
-        dotenv.config({ path: __dirname + '/./../.env' });
         const file = yield getFigmaFileViaRESTAPI({
             fileKey: DEFAULT_FIGMA_FILE_KEY,
-            token: process.env.FIGMA_FILE_KEY,
+            token: FIGMA_FILE_KEY,
         });
         // TRY INSTEAD: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield
         const recurse = (node, arr) => node.children ? arr.concat(node.children) : arr.push(node);
@@ -235,8 +229,6 @@ if (typeof require !== 'undefined' && require.main === module) {
     // console.log(args)
     ;
     (() => __awaiter(void 0, void 0, void 0, function* () {
-        // IMPORT ENV VARS
-        dotenv.config({ path: __dirname + '/./../.env' });
         const figmaUrl = buildFigmaUrlWithParameters(args.url);
         // Our script to evaluate in console
         const expression = `JSON.stringify(
