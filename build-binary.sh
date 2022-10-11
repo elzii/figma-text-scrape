@@ -15,7 +15,7 @@ chmod +x $BIN
 >&2 echo -e "Moving 'dist/$(basename "$DIST_DIR/index.js")' to 'bin/$(basename "$BIN")' and made it executable"
 >&2 echo -e "Validating....\n"
 
-if [[ `cat $BIN | head -n 1 | egrep -Eq '^\#\!\/usr\/bin\/env bash$'; echo $?` -eq 0 ]]; then
+if [[ `cat $BIN | head -n 1 | egrep -Eq '^\#\!\/usr\/bin\/env node$'; echo $?` -eq 0 ]]; then
   >&2 echo -e "✅ \033[32mSUCCESS\033[39m"
 else
   >&2 echo -e "❌ \033[31mERROR\033[39m"
