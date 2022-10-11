@@ -1,9 +1,20 @@
-import('dotenv').then(module => module.default).then(m => m.config())
+import * as dotenv from 'dotenv'
+import path from 'path'
 import * as puppeteer from 'puppeteer'
 import { ArgumentParser } from 'argparse'
+import * as CProc from 'child_process'
+
+// SETUP
+dotenv.config()
+// dotenv.config({ path: path.resolve('../.env') })
+// dotenv.config({ path: path.resolve(__dirname, '../.env') })
 
 
-const DEFAULT_FIGMA_FILE_URL = `https://www.figma.com/file/AaMB8IZv56Hg2a7ve7BHj7/Untitled`
+// DEFAULTS
+const DEFAULT_FIGMA_FILE_KEY = `AaMB8IZv56Hg2a7ve7BHj7`
+const DEFAULT_FIGMA_FILE_URL = `https://www.figma.com/file/${DEFAULT_FIGMA_FILE_KEY}/Untitled`
+const FIGMA_FILE_KEY = process.env.FIGMA_FILE_KEY as string
+
 
 const parser = new ArgumentParser({ description: 'Figma Puppeteer Scraping' })
       parser.add_argument('-u', '--url', { 
@@ -61,32 +72,66 @@ export async function getChromeRemoteDebuggingWebSocketInfo(wsInfoUrl?: string) 
 
 export interface FigmaFileFetchOptions {
   fileKey: string
-  nodeId: string
-  versionId?: string
   token: string
+  nodeId?: string
+  versionId?: string
   depth?: number
 }
 
+export interface FigmaFileResult {
+  document: DocumentNode,
+  components: {
+    [key: string]: any
+  }
+  componentSets: {
+    [key: string]: any
+  },
+  styles: {
+    [key: string]: any
+  },
+  name: string,
+  lastModified: string
+  thumbnailUrl: string
+  version: string
+  role: string
+  editorType: 'figma' | 'figjam'
+  linkAccess: string
+}
+
 // https://www.figma.com/developers/api#get-file-nodes-endpoint
-export async function getFigmaFileViaRESTAPI({ fileKey, nodeId, versionId, token, ...opts }: FigmaFileFetchOptions) {
+export async function getFigmaFileViaRESTAPI({ fileKey, nodeId, versionId, token, depth }: FigmaFileFetchOptions): Promise<FigmaFileResult> {
   const fetch = (...args: any) => import("node-fetch").then(({ default: fetch }) => fetch(args))
-  const uriBase = `https://api.figma.com/v1/files/${fileKey}/nodes`
+  const uriBase = `https://api.figma.com/v1/files/${fileKey}`
   const qs = new URLSearchParams()
-        qs.set('depth', opts.depth ? Number(opts.depth).toString() : '1')
-        qs.set('ids', encodeURIComponent(nodeId))
+        !!depth && qs.set('depth', Number(depth).toString())
+        !!nodeId && qs.set('ids', nodeId)
         !!versionId && qs.set('version-id', versionId)
 
   const url = `${uriBase}?${qs.toString()}`
 
-  const response = await fetch(url, {
-    headers: {
-      'X-Figma-Token': token,
-    },
-  })
-    .then(res => res.json())
-    .catch(console.error)
+  // @TOKEN_ERROR
+  // const response = await fetch(url, {
+  //   method: 'GET',
+  //   headers: {
+  //     'X-Figma-Token': `${token}`,
+  //     'Accept': '*/*'
+  //   },
+  // })
+  //   .then(res => res.json())
+  // return response
 
-  return response
+  // @WORKING
+  return new Promise((resolve, reject) => {
+    const cmd = `curl --silent -X GET \
+      --header "X-Figma-Token: ${process.env.FIGMA_FILE_KEY}" \
+      ${url}`
+    CProc.exec(cmd, (err, stdout, _stderr) => {
+      if( err ) reject(err)
+      resolve(JSON.parse(stdout))
+    })
+  })
+  
+
 }
 
 export async function getWindowId(client: puppeteer.CDPSession) {
@@ -155,35 +200,70 @@ export async function scrapeFigmaFile(url :string, expression: string) {
 
 
 
+export function buildFigmaUrlWithParameters(url: string) {
+  let figmaUrl = url ?? DEFAULT_FIGMA_FILE_URL
+  let qs: URLSearchParams
+
+  if ( args.fileVersion ) {
+    let [ base, params ] = figmaUrl.split('?')
+    if ( params ) {
+      qs = new URLSearchParams(params)
+      qs.set('version-id', args.fileVersion)
+      figmaUrl = `${base}/${qs.toString()}`
+    } else {
+        qs = new URLSearchParams(`?version-id=${args.fileVersion}`)
+        figmaUrl = `${figmaUrl}/${qs.toString()}`
+    }
+  }
+
+  return figmaUrl
+}
 
 
+
+export async function iterateRESTAPIExample() {
+    
+    dotenv.config({ path:__dirname + '/./../.env' })
+
+    const file = await getFigmaFileViaRESTAPI({
+      fileKey: DEFAULT_FIGMA_FILE_KEY,
+      token: process.env.FIGMA_FILE_KEY as string,
+    })
+  
+    // TRY INSTEAD: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield
+    const recurse = (node: any, arr: any[]) => node.children ? arr.concat(node.children) : arr.push(node)
+    let arr: any[] = []
+    for ( let p of file.document.children ) {
+      arr.push(p)
+
+      if (p.children) {
+        for ( let c of p.children ) {
+          arr.push(c)
+          if ((c as ChildrenMixin).children ) {
+            for ( let x of (c as ChildrenMixin).children ) {
+              recurse(x, arr)
+            }
+          }
+        }
+      }
+    }
+
+    return arr
+}
 
 
 // IF CALLING DIRECTLY: Ex: ts-node src/index.ts -u http://figma.com/file/abcXYZ123/MyDocumentName
 if (typeof require !== 'undefined' && require.main === module) {
 
-  console.log(process.env)
-  console.log(args)
-  process.exit(1)
+  // console.log(process.env)
+  // console.log(args)
 
   ;(async () => {
+    // IMPORT ENV VARS
+    dotenv.config({ path:__dirname + '/./../.env' })
+
+    const figmaUrl = buildFigmaUrlWithParameters(args.url)
     
-    let figmaUrl = args.url ?? DEFAULT_FIGMA_FILE_URL
-    let qs: URLSearchParams
-    if ( args.fileVersion ) {
-      let [ base, params ] = figmaUrl.split('?')
-      if ( params ) {
-        qs = new URLSearchParams(params)
-        qs.set('version-id', args.fileVersion)
-        figmaUrl = `${base}/${qs.toString()}`
-      } else {
-        qs = new URLSearchParams(`?version-id=${args.fileVersion}`)
-        figmaUrl = `${figmaUrl}/${qs.toString()}`
-      }
-    }
-
-
-
     // Our script to evaluate in console
     const expression = `JSON.stringify(
       figma.currentPage.findAllWithCriteria({ types: ['TEXT'] })

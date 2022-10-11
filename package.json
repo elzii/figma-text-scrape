@@ -5,8 +5,9 @@
   "private": true,
   "scripts": {
     "start": "nodemon --quiet",
-    "test": "ts-node src/index.ts -t 1",
+    "test": "printf \"%s\" $(cat ./.env); ts-node src/index.ts --debug",
     "build": "tsc src/index.ts",
+    "ws:test": "ts-node src/index.ts -t 1",
     "print:env": "cat ./.env"
   },
   "bin": {
@@ -16,12 +17,14 @@
   "dependencies": {
     "argparse": "^2.0.1",
     "dotenv": "^16.0.3",
+    "figma-api": "^1.10.1",
     "jest-environment-node": "^29.1.2",
     "node-fetch": "^3.2.10",
     "puppeteer": "^18.2.1"
   },
   "devDependencies": {
     "@types/argparse": "^2.0.10",
+    "@types/figma": "^1.0.4",
     "@types/node-fetch": "^2.6.2",
     "nodemon": "^2.0.20",
     "ts-node": "^10.9.1"
