@@ -9,7 +9,7 @@ BIN=$BIN_DIR/$BIN_NAME
 cp $DIST_DIR/index.js $BIN_DIR/$BIN_NAME
 
 # cat "$BIN_DIR/figma-scrape-text" | sed -E '1s/^/\#\!/usr/bin/env bash\n/'
-echo -e "#!/usr/bin/env bash\n$(cat $BIN)" > $BIN
+echo -e "#!/usr/bin/env node\n$(cat $BIN)" > $BIN
 chmod +x $BIN
 
 >&2 echo -e "Moving 'dist/$(basename "$DIST_DIR/index.js")' to 'bin/$(basename "$BIN")' and made it executable"
