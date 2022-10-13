@@ -6,10 +6,17 @@
   "scripts": {
     "start": "nodemon --quiet",
     "test": "printf \"%s\" $(cat ./.env); ts-node src/index.ts --debug",
-    "build": "tsc -t es6 --module node16 --outDir 'dist/' ./src/index.ts",
     "build:bin": "./build-binary.sh",
     "ws:test": "ts-node src/index.ts -t 1",
-    "print:env": "cat ./.env"
+    "print:env": "cat ./.env",
+    "clean": "rm -fr dist",
+    "build": "tsc  --project tsconfig.json",
+    "build:bundle": "tsc --project tsconfig.json && npm run bundle:esm && npm run bundle:esm:min && npm run bundle:umd && npm run bundle:umd:min && npm run build:stats",
+    "build:stats": "(echo '\\033[35;3m' ; cd dist && ls -lh index*js index*gz | tail -n +2 | awk '{print $5,$9}')",
+    "bundle:esm": "rollup dist/index.js --file dist/index.mjs --format esm",
+    "bundle:esm:min": "terser --ecma 6 --compress --mangle --module -o dist/index.min.mjs -- dist/index.mjs && gzip -9 -c dist/index.min.mjs > dist/index.min.mjs.gz",
+    "bundle:umd": "rollup dist/index.js --file dist/index.umd.js --format umd --name sayHello",
+    "bundle:umd:min": "terser --ecma 6 --compress --mangle -o dist/index.umd.min.js -- dist/index.umd.js && gzip -9 -c dist/index.umd.min.js > dist/index.umd.min.js.gz"
   },
   "bin": {
     "figma-scrape-text": "dist/index.js"
@@ -28,6 +35,9 @@
     "@types/figma": "^1.0.4",
     "@types/node-fetch": "^2.6.2",
     "nodemon": "^2.0.20",
-    "ts-node": "^10.9.1"
+    "rollup": "^3.0.0",
+    "terser": "^5.15.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.4"
   }
 }
